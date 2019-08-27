@@ -83,6 +83,9 @@ export const EventContainer = styled.View`
   min-height: 80px;
   border-bottom-width: 1px;
   border-bottom-color: ${themes.light.card.borderColor};
+  border-top-width: 1px;
+  border-top-color: ${themes.light.card.borderColor};
+  margin-bottom: 20px;
 `;
 export const EventRowContainer = styled.View`
   flex: 1;

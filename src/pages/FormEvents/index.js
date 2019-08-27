@@ -6,6 +6,7 @@ import {TextField} from 'react-native-material-textfield';
 import {Dropdown} from 'react-native-material-dropdown';
 
 import getRealm from '../../services/realm';
+import EventContext from '../../services/EventContext';
 
 import {getStringDate, formatDateBR} from '../../functions';
 
@@ -41,7 +42,7 @@ export default function FormEvents({navigation}) {
     getDisciplinaData();
   }, []);
 
-  function handleSaveButton() {
+  async function handleSaveButton() {
     if (disciplina === false || disciplina === null || disciplina === '') {
       setErrorDisciplina('Não pode ser vazio');
     }
@@ -55,8 +56,30 @@ export default function FormEvents({navigation}) {
     }
 
     if (!errorDisciplina && !errorName && !errorDate) {
-      saveEvent();
+      return await saveEvent();
     }
+  }
+
+  async function getEvents() {
+    const realm = await getRealm();
+    const dataAll = realm
+      .objects('Event')
+      .sorted('date')
+      .filtered(`date >= ${new Date().toISOString().slice(0, -5)}`);
+
+    const dataNext = realm
+      .objects('Event')
+      .sorted('date')
+      .filtered(
+        `date >= ${new Date()
+          .toISOString()
+          .slice(0, -5)} AND date <= ${new Date(
+          new Date().setDate(new Date().getDate() + 7),
+        )
+          .toISOString()
+          .slice(0, -5)}`,
+      );
+    return {dataNext, dataAll};
   }
 
   async function saveEvent() {
@@ -76,14 +99,7 @@ export default function FormEvents({navigation}) {
       realm.create('Event', data, 'modified');
     });
 
-    navigation.reset(
-      [
-        NavigationActions.navigate({
-          routeName: 'Events',
-        }),
-      ],
-      0,
-    );
+    return await Promise.resolve(getEvents());
   }
 
   async function toggleDatePicker() {
@@ -94,7 +110,6 @@ export default function FormEvents({navigation}) {
       if (action !== DatePickerAndroid.dismissedAction) {
         setDate(new Date(year, month, day));
         setDateText(formatDateBR(getStringDate(new Date(year, month, day))));
-        setPlaceholderDate(false);
       }
     } catch ({code, message}) {
       console.warn('Cannot open date picker', message);
@@ -133,11 +148,23 @@ export default function FormEvents({navigation}) {
             toggleDatePicker();
           }}
         />
-        <SubmitButton onPress={handleSaveButton}>
-          <Icon name={'content-save'} size={24} color={'#fff'} />
-          <SubmitButtonText>Salvar</SubmitButtonText>
-          <EmptyContainer />
-        </SubmitButton>
+        <EventContext.Consumer>
+          {({setAllEvents, setNextEvents}) => {
+            return (
+              <SubmitButton
+                onPress={async () => {
+                  const ret = await handleSaveButton();
+                  setAllEvents(ret.dataAll);
+                  setNextEvents(ret.dataNext);
+                  navigation.goBack();
+                }}>
+                <Icon name={'content-save'} size={24} color={'#fff'} />
+                <SubmitButtonText>Salvar</SubmitButtonText>
+                <EmptyContainer />
+              </SubmitButton>
+            );
+          }}
+        </EventContext.Consumer>
       </Form>
       <Form />
     </Container>
