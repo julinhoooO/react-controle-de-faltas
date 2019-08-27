@@ -1,16 +1,14 @@
-export default class GradeSchema {
+export default class EventSchema {
   static schema = {
-    name: 'Grade',
+    name: 'Event',
     primaryKey: 'id',
     properties: {
       id: {
         type: 'int',
         indexed: true,
       },
-      id_disciplina: 'int',
+      disciplina: 'string',
       name: 'string',
-      grade: 'int',
-      maximum_grade: 'int',
       date: 'date',
     },
   };

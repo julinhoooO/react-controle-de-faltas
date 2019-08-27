@@ -8,8 +8,8 @@ export default class DisciplinaSchema {
         indexed: true,
       },
       name: 'string',
-      miss_quantity: 'string',
-      maximum_miss: 'string',
+      miss_quantity: 'int',
+      maximum_miss: 'int',
     },
   };
 }

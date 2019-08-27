@@ -9,7 +9,7 @@ export default function src() {
       <StatusBar
         barStyle="light-contet"
         translucent
-        backgroundColor="transparent"
+        backgroundColor="#7159c1"
       />
       <Routes />
     </>
