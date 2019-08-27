@@ -41,6 +41,31 @@ export const List = styled.FlatList.attrs({
   contentContainerStyle: {
     paddingBottom: 84,
   },
+  showsVerticalScrollIndicator: false,
 })`
   margin-top: 20px;
+`;
+
+export const FloatingButtonOpenModal = styled.TouchableOpacity`
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  height: 64px;
+  width: 64px;
+  border-radius: 32px;
+  padding: 8px;
+  background-color: ${themes.light.button.backgroundColor};
+  justify-content: center;
+  align-items: center;
+  shadowColor: #000;
+  shadowOffset: { width: 0, height: 2 };
+  shadowOpacity: 0.8;
+  shadowRadius: 2;
+  elevation: 2;
+`;
+
+export const FloatingButtonOpenModalText = styled.Text`
+  font-size: 32px;
+  font-weight: bold;
+  color: ${themes.light.button.color};
 `;

@@ -1,7 +1,10 @@
 import React, {useState, useEffect} from 'react';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {NavigationActions} from 'react-navigation';
 
 import getRealm from '../../services/realm';
+
+import {getStringDate, formatDateBR} from '../../functions';
 
 import {
   Placeholder,
@@ -12,19 +15,43 @@ import {
 
 import {
   Container,
+  HeaderDisciplina,
   Title,
+  DeleteButton,
   Card,
   RowContainer,
+  ColumnContainer,
   Name,
+  NameTiny,
   ButtonsContainer,
   AddMissButton,
-  GradesContainer,
+  DataContainer,
   GradeData,
-  AddGradeButton,
-  AddGradeButtonText,
+  FloatingButtonOpenModal,
+  FloatingButtonOpenModalText,
+  GradeDay,
+  GradeMonth,
+  GradeYear,
 } from './styles';
 
 export default function Aulas({navigation}) {
+  const monthsString = [
+    'Jan',
+    'Fev',
+    'Mar',
+    'Abr',
+    'Mai',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Set',
+    'Out',
+    'Nov',
+    'Dez',
+  ];
+  const weeksString = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const [isFocused, setIsFocused] = useState(navigation.isFocused());
   const [disciplinaData, setDisciplinaData] = useState([]);
   const [gradesData, setGradesData] = useState([]);
   const {params} = navigation.state;
@@ -48,7 +75,6 @@ export default function Aulas({navigation}) {
       .objects('Disciplina')
       .sorted('name')
       .filtered(`id == ${params.data.id}`);
-    console.log(newData[0], updatedData);
     setDisciplinaData(newData[0]);
   }
 
@@ -72,11 +98,32 @@ export default function Aulas({navigation}) {
       .objects('Disciplina')
       .sorted('name')
       .filtered(`id == ${params.data.id}`);
-    console.log(newData[0], updatedData);
     setDisciplinaData(newData[0]);
   }
 
+  async function deleteDisciplina() {
+    const realm = await getRealm();
+    const disciplinaData = realm
+      .objects('Disciplina')
+      .sorted('name')
+      .filtered(`id == ${params.data.id}`);
+    realm.write(() => {
+      realm.delete(disciplinaData[0]);
+    });
+
+    navigation.reset(
+      [
+        NavigationActions.navigate({
+          routeName: 'DashBoard',
+          params: {page: 'Disciplinas'},
+        }),
+      ],
+      0,
+    );
+  }
+
   useEffect(() => {
+    let isSubscribed = true;
     async function getDisciplinaData() {
       const realm = await getRealm();
       const disciplinaDataMiss = realm
@@ -87,58 +134,97 @@ export default function Aulas({navigation}) {
         .objects('Grade')
         .sorted('name', true)
         .filtered(`id_disciplina == ${params.data.id}`);
-      if (gradeData.length) {
+      if (gradeData.length && isSubscribed) {
         setGradesData(gradeData);
       }
-      if (disciplinaDataMiss.length) {
+      if (disciplinaDataMiss.length && isSubscribed) {
         setDisciplinaData(disciplinaDataMiss[0]);
       }
     }
     getDisciplinaData();
-  }, [disciplinaData]);
+    return () => (isSubscribed = false);
+  }, [isFocused]);
   return (
     <Container>
-      {disciplinaData.length ? (
+      {disciplinaData.id ? (
         <>
-          <Title>{disciplinaData.name}</Title>
+          <HeaderDisciplina>
+            <Title>{disciplinaData.name}</Title>
+            <DeleteButton onPress={deleteDisciplina}>
+              <Icon name={'delete'} size={24} color="#7159c1" />
+            </DeleteButton>
+          </HeaderDisciplina>
           <Card>
             <RowContainer>
-              <Name>
-                Faltas Restantes:{' '}
-                {disciplinaData.maximum_miss - disciplinaData.miss_quantity}
-              </Name>
-              <AddMissButton onPress={increaseMisses}>
-                <Icon name={'add'} size={24} />
-              </AddMissButton>
-              <AddMissButton onPress={decreaseMisses}>
-                <Icon name={'remove'} size={24} />
-              </AddMissButton>
+              <ColumnContainer>
+                <Name>Faltas: {disciplinaData.miss_quantity}</Name>
+                <NameTiny>
+                  Faltas Restantes:{' '}
+                  {disciplinaData.maximum_miss - disciplinaData.miss_quantity}
+                </NameTiny>
+              </ColumnContainer>
+              <ButtonsContainer>
+                <AddMissButton onPress={increaseMisses}>
+                  <Icon name={'plus'} size={24} color="#fff" />
+                </AddMissButton>
+                <AddMissButton onPress={decreaseMisses}>
+                  <Icon name={'minus'} size={24} color="#fff" />
+                </AddMissButton>
+              </ButtonsContainer>
             </RowContainer>
           </Card>
+          <HeaderDisciplina>
+            <Title>Provas/Trabalhos</Title>
+          </HeaderDisciplina>
           {gradesData.map(grade => (
             <Card key={grade.id}>
               <RowContainer>
-                <Name>{grade.name}</Name>
-                <GradesContainer>
-                  <GradeData>
+                <DataContainer>
+                  <GradeMonth>
+                    {weeksString[new Date(grade.date).getDay()]}
+                  </GradeMonth>
+                  <GradeDay>{new Date(grade.date).getDate()}</GradeDay>
+                  <GradeMonth>
+                    {monthsString[new Date(grade.date).getMonth()]}
+                  </GradeMonth>
+                </DataContainer>
+                <DataContainer flex={8}>
+                  <Name>{grade.name}</Name>
+                  <NameTiny>
                     Nota: {grade.grade}/{grade.maximum_grade}
-                  </GradeData>
-                  {/* <GradeData>
-                {grade.date
-                  .split('-')
-                  .reverse()
-                  .join('/')}
-              </GradeData> */}
-                </GradesContainer>
+                  </NameTiny>
+                </DataContainer>
+                <ButtonsContainer>
+                  <RowContainer>
+                    <AddMissButton
+                      onPress={() => {
+                        navigation.navigate('FormGrade', {
+                          update: true,
+                          data: params.data,
+                          grade_id: grade.id,
+                        });
+                      }}>
+                      <Icon name={'pencil'} size={24} color="#fff" />
+                    </AddMissButton>
+                    <AddMissButton onPress={() => {}}>
+                      <Icon name={'delete'} size={24} color="#fff" />
+                    </AddMissButton>
+                  </RowContainer>
+                </ButtonsContainer>
               </RowContainer>
             </Card>
           ))}
-          <AddGradeButton
+          <FloatingButtonOpenModal
             onPress={() => {
-              navigation.navigate('FormGrade', params.data);
+              navigation.navigate('FormGrade', {
+                data: params.data,
+                update: false,
+              });
             }}>
-            <AddGradeButtonText>Adicionar Trabalho/Prova</AddGradeButtonText>
-          </AddGradeButton>
+            <FloatingButtonOpenModalText>
+              <Icon name={'bookmark-plus'} size={24} />
+            </FloatingButtonOpenModalText>
+          </FloatingButtonOpenModal>
         </>
       ) : (
         <>

@@ -23,17 +23,6 @@ export const Form = styled.View`
   padding: 30px;
 `;
 
-export const Input = styled.TextInput.attrs({
-  placeHolderTextColor: '#999',
-})`
-  padding: 12px 15px;
-  border-radius: 4px;
-  border: 2px solid ${props => (props.error ? '#FF7272' : '#f1f1f1')};
-  background-color: #f1f1f1;
-  color: #333;
-  font-size: 16px;
-  margin-bottom: 10px;
-`;
 export const SubmitButton = styled.TouchableOpacity`
   flex-direction: row;
   height: 52px;
