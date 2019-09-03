@@ -3,9 +3,14 @@ export function getStringDate(date = new Date()) {
   let month = date.getMonth();
   let day = date.getDate();
 
+  month++;
+
   if (month < 10) {
-    month++;
     month = '0' + month;
+  }
+
+  if (day < 10) {
+    day = '0' + day;
   }
 
   return year + '-' + month + '-' + day;

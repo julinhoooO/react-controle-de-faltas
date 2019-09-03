@@ -100,7 +100,7 @@ const BottomTabBar = createMaterialTopTabNavigator(
         return <Text style={{color: color}}>{labelName}</Text>;
       },
     }),
-    lazy: true,
+    lazy: false,
     swipeEnabled: true,
     initialLayout: {
       height: Dimensions.get('window').height,

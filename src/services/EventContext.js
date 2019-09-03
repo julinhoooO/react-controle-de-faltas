@@ -5,4 +5,5 @@ export default EventContext = createContext({
   allEvents: [],
   setNextEvents: () => {},
   setAllEvents: () => {},
+  getEvents: () => {},
 });

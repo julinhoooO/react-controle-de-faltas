@@ -1,5 +1,7 @@
-import React, {Component, createContext} from 'react';
+import React, {Component} from 'react';
 import {StatusBar} from 'react-native';
+
+import {Provider as PaperProvider} from 'react-native-paper';
 
 import getRealm from './services/realm';
 import EventContext from './services/EventContext';
@@ -20,9 +22,10 @@ class src extends Component {
     allEvents: [],
     setNextEvents: this.setNextEvents,
     setAllEvents: this.setAllEvents,
+    getEvents: this.getEvents.bind(this),
   };
 
-  async getEvents() {
+  async getEvents(search = '') {
     const realm = await getRealm();
     const dataAll = realm
       .objects('Event')
@@ -41,12 +44,14 @@ class src extends Component {
           .toISOString()
           .slice(0, -5)}`,
       );
-    if (dataNext.length) {
-      this.setNextEvents(dataNext);
+    let retAll = dataAll;
+    if (search !== '') {
+      retAll = dataAll.filtered(
+        `name CONTAINS "${search}" || disciplina CONTAINS[c] "${search}"`,
+      );
     }
-    if (dataAll.length) {
-      this.setAllEvents(dataAll);
-    }
+    this.setNextEvents(dataNext);
+    this.setAllEvents(retAll);
   }
 
   componentDidMount() {
@@ -62,7 +67,9 @@ class src extends Component {
           backgroundColor="#7159c1"
         />
         <EventContext.Provider value={this.state}>
-          <Routes />
+          <PaperProvider>
+            <Routes />
+          </PaperProvider>
         </EventContext.Provider>
       </>
     );
