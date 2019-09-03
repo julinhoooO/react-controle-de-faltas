@@ -2,14 +2,7 @@ import React, {useState, useEffect} from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import EventContext from '../../services/EventContext';
 
-import {
-  Container,
-  Title,
-  EmptyTextContainer,
-  EmptyText,
-  List,
-  FloatingButtonOpenModal,
-} from './styles';
+import {Container, Title, EmptyTextContainer, EmptyText, List} from './styles';
 
 import {
   EventContainer,
@@ -48,44 +41,42 @@ export default function Home({navigation}) {
     <Container>
       <Title>Próximos eventos</Title>
       <EventContext.Consumer>
-        {({nextEvents}) => {
-          console.log(nextEvents);
-          return nextEvents.length ? (
-            <List
-              keyboardShouldPersistTaps="handled"
-              data={nextEvents}
-              keyExtractor={item => String(item.id)}
-              renderItem={({item}) => {
-                return (
-                  <EventContainer>
-                    <EventRowContainer>
-                      <EventColumnContainer>
-                        <EventMonth>
-                          {weeksString[new Date(item.date).getDay()]}
-                        </EventMonth>
-                        <EventDay>{new Date(item.date).getDate()}</EventDay>
-                        <EventMonth>
-                          {monthsString[new Date(item.date).getMonth()]}
-                        </EventMonth>
-                      </EventColumnContainer>
-                      <EventColumnContainer flex={9}>
-                        <EventName>{item.name}</EventName>
-                        <EventTinyName>{item.disciplina}</EventTinyName>
-                      </EventColumnContainer>
-                    </EventRowContainer>
-                  </EventContainer>
-                );
-              }}
-            />
-          ) : (
-            <EmptyTextContainer>
-              <EmptyText>
-                Que bom, parece que você não tem nenhum evento nos próximo 7
-                dias! =)
-              </EmptyText>
-            </EmptyTextContainer>
-          );
-        }}
+        {({nextEvents}) => (
+          <List
+            keyboardShouldPersistTaps="handled"
+            data={nextEvents}
+            keyExtractor={item => String(item.id)}
+            ListEmptyComponent={
+              <EmptyTextContainer>
+                <EmptyText>
+                  Que bom, parece que você não tem nenhum evento nos próximo 7
+                  dias! =)
+                </EmptyText>
+              </EmptyTextContainer>
+            }
+            renderItem={({item}) => {
+              const date = new Date(item.date);
+              const day = date.getDate();
+              const weekDay = date.getDay();
+              const month = date.getMonth();
+              return (
+                <EventContainer key={item.id}>
+                  <EventRowContainer>
+                    <EventColumnContainer>
+                      <EventMonth>{weeksString[weekDay]}</EventMonth>
+                      <EventDay>{day > 9 ? day : '0' + day}</EventDay>
+                      <EventMonth>{monthsString[month]}</EventMonth>
+                    </EventColumnContainer>
+                    <EventColumnContainer flex={9}>
+                      <EventName>{item.name}</EventName>
+                      <EventTinyName>{item.disciplina}</EventTinyName>
+                    </EventColumnContainer>
+                  </EventRowContainer>
+                </EventContainer>
+              );
+            }}
+          />
+        )}
       </EventContext.Consumer>
     </Container>
   );

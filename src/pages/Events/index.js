@@ -1,12 +1,13 @@
 import React, {useState, useEffect} from 'react';
-import {NavigationActions} from 'react-navigation';
+import {Searchbar, Button, Paragraph, Dialog, Portal} from 'react-native-paper';
+import {NavigationActions, StackActions} from 'react-navigation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import EventContext from '../../services/EventContext';
 
 import {
   Container,
-  Title,
+  SearchbarContainer,
   EmptyTextContainer,
   EmptyText,
   List,
@@ -23,12 +24,15 @@ import {
   EventMonth,
 } from './styles';
 
+import {TouchableRipple} from 'react-native-paper';
+
 import getRealm from '../../services/realm';
 import {getStringDate, formatDateBR} from '../../functions';
 
-export default function Home({navigation}) {
-  const [allEvents, setAllEvents] = useState([]);
-
+export default function Events({navigation}) {
+  const [search, setSearch] = useState('');
+  const [idDeleteEvent, setIdDeleteEvent] = useState();
+  const [visible, setVisible] = useState(false);
   const monthsString = [
     'Jan',
     'Fev',
@@ -47,47 +51,86 @@ export default function Home({navigation}) {
 
   async function deleteEvent(id) {
     const realm = await getRealm();
-    const eventData = realm
-      .objects('Event')
-      .sorted('name')
-      .filtered(`id == ${id}`);
+    const eventData = realm.objects('Event').filtered(`id == ${id}`);
     realm.write(() => {
       realm.delete(eventData[0]);
     });
-    navigation.reset(
-      [
-        NavigationActions.navigate({
-          routeName: 'Events',
-        }),
-      ],
-      0,
-    );
   }
   return (
     <>
       <Container>
-        <Title>Eventos</Title>
         <EventContext.Consumer>
-          {({allEvents}) => {
-            console.log(allEvents.length);
-            return allEvents.length ? (
+          {({allEvents, getEvents}) => (
+            <>
+              <Portal>
+                <Dialog
+                  visible={visible}
+                  onDismiss={() => {
+                    setVisible(false);
+                  }}>
+                  <Dialog.Title>Excluir</Dialog.Title>
+                  <Dialog.Content>
+                    <Paragraph>Tem certeza que deseja excluir?</Paragraph>
+                  </Dialog.Content>
+                  <Dialog.Actions>
+                    <Button
+                      onPress={() => {
+                        setVisible(false);
+                      }}>
+                      Cancelar
+                    </Button>
+                    <Button
+                      onPress={() => {
+                        deleteEvent(idDeleteEvent);
+                        getEvents();
+                        setVisible(false);
+                      }}>
+                      Excluir
+                    </Button>
+                  </Dialog.Actions>
+                </Dialog>
+              </Portal>
+              <SearchbarContainer>
+                <Searchbar
+                  placeholder="Pesquisar eventos"
+                  onChangeText={value => {
+                    setSearch(value);
+                    if (value !== '' || value !== false) {
+                      getEvents(value);
+                    }
+                  }}
+                  value={search}
+                />
+              </SearchbarContainer>
               <List
                 keyboardShouldPersistTaps="handled"
                 data={allEvents}
+                extraData={allEvents}
                 keyExtractor={item => String(item.id)}
+                getItemLayout={(data, index) => ({
+                  length: 120,
+                  offset: 120 * index,
+                  index,
+                })}
+                ListEmptyComponent={
+                  <EmptyTextContainer>
+                    <EmptyText>
+                      Nada por aqui, comece adicionando um novo evento!
+                    </EmptyText>
+                  </EmptyTextContainer>
+                }
                 renderItem={({item}) => {
-                  console.log(item);
+                  const date = new Date(item.date);
+                  const day = date.getDate();
+                  const weekDay = date.getDay();
+                  const month = date.getMonth();
                   return (
                     <EventContainer key={item.id}>
                       <EventRowContainer>
                         <EventColumnContainer>
-                          <EventMonth>
-                            {weeksString[new Date(item.date).getDay()]}
-                          </EventMonth>
-                          <EventDay>{new Date(item.date).getDate()}</EventDay>
-                          <EventMonth>
-                            {monthsString[new Date(item.date).getMonth()]}
-                          </EventMonth>
+                          <EventMonth>{weeksString[weekDay]}</EventMonth>
+                          <EventDay>{day > 9 ? day : '0' + day}</EventDay>
+                          <EventMonth>{monthsString[month]}</EventMonth>
                         </EventColumnContainer>
                         <EventColumnContainer flex={8}>
                           <EventName>{item.name}</EventName>
@@ -95,7 +138,10 @@ export default function Home({navigation}) {
                         </EventColumnContainer>
                         <EventButtonsContainer>
                           <EventAddMissButton
-                            onPress={() => deleteEvent(item.id)}>
+                            onPress={() => {
+                              setIdDeleteEvent(item.id);
+                              setVisible(true);
+                            }}>
                             <Icon name={'delete'} size={24} color="#fff" />
                           </EventAddMissButton>
                         </EventButtonsContainer>
@@ -104,14 +150,8 @@ export default function Home({navigation}) {
                   );
                 }}
               />
-            ) : (
-              <EmptyTextContainer>
-                <EmptyText>
-                  Nada por aqui, comece adicionando um novo evento!
-                </EmptyText>
-              </EmptyTextContainer>
-            );
-          }}
+            </>
+          )}
         </EventContext.Consumer>
       </Container>
       <FloatingButtonOpenModal

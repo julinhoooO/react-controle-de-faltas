@@ -9,6 +9,10 @@ export const Container = styled.View`
   padding-top: ${30 + getStatusBarHeight(true)}px;
 `;
 
+export const SearchbarContainer = styled.View`
+  padding: 10px 10px 0;
+`;
+
 export const Title = styled.Text`
   justify-content: center;
   align-items: center;

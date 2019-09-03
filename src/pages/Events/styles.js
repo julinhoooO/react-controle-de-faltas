@@ -9,6 +9,10 @@ export const Container = styled.View`
   padding-top: ${30 + getStatusBarHeight(true)}px;
 `;
 
+export const SearchbarContainer = styled.View`
+  padding: 10px 10px 0;
+`;
+
 export const Title = styled.Text`
   justify-content: center;
   align-items: center;
@@ -77,15 +81,13 @@ export const Loading = styled.ActivityIndicator.attrs({
 `;
 
 export const EventContainer = styled.View`
-  flex: 1;
   background-color: ${themes.light.card.backgroundColor};
   padding: 4px;
-  min-height: 80px;
+  height: 100px;
+  min-height: 100px;
+  max-height: 100px;
   border-bottom-width: 1px;
   border-bottom-color: ${themes.light.card.borderColor};
-  border-top-width: 1px;
-  border-top-color: ${themes.light.card.borderColor};
-  margin-bottom: 20px;
 `;
 export const EventRowContainer = styled.View`
   flex: 1;

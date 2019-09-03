@@ -126,6 +126,8 @@ export default function FormEvents({navigation}) {
           onChangeText={setDisciplina}
           tintColor={'#7159c1'}
           baseColor={'#7159c1'}
+          autoCompleteType={'off'}
+          autoFocus={true}
         />
         <TextField
           value={name}
@@ -135,6 +137,7 @@ export default function FormEvents({navigation}) {
           baseColor={'#7159c1'}
           onChangeText={setName}
           title={'Digite o nome do evento'}
+          autoCompleteType={'off'}
         />
         <TextField
           value={dateText}
@@ -147,6 +150,7 @@ export default function FormEvents({navigation}) {
             Keyboard.dismiss();
             toggleDatePicker();
           }}
+          autoCompleteType={'off'}
         />
         <EventContext.Consumer>
           {({setAllEvents, setNextEvents}) => {

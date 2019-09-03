@@ -114,8 +114,11 @@ export default function FormGrade({navigation}) {
     });
 
     const navigateToAulas = StackActions.reset({
-      index: 0,
+      index: 1,
       actions: [
+        NavigationActions.navigate({
+          routeName: 'Disciplinas',
+        }),
         NavigationActions.navigate({
           routeName: 'Details',
           params: {data: params.data},
@@ -189,6 +192,8 @@ export default function FormGrade({navigation}) {
               baseColor={'#7159c1'}
               onChangeText={setName}
               title={'Digite o nome do trabalho/prova'}
+              autoCompleteType={'off'}
+              autoFocus={true}
             />
             <TextField
               value={grade}
@@ -199,6 +204,7 @@ export default function FormGrade({navigation}) {
               onChangeText={setGrade}
               title={'Digite a nota do trabalho/prova'}
               keyboardType={'numeric'}
+              autoCompleteType={'off'}
             />
             <TextField
               value={maximumGrade}
@@ -209,6 +215,7 @@ export default function FormGrade({navigation}) {
               onChangeText={setMaximumGrade}
               title={'Digite a nota máxima para esse trabalho/prova'}
               keyboardType={'numeric'}
+              autoCompleteType={'off'}
             />
             <TextField
               value={dateText}
@@ -221,6 +228,7 @@ export default function FormGrade({navigation}) {
                 Keyboard.dismiss();
                 toggleDatePicker();
               }}
+              autoCompleteType={'off'}
             />
             <SubmitButton onPress={handleSaveButton}>
               <Icon name={'content-save'} size={24} color={'#fff'} />

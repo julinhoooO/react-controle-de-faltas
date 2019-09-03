@@ -131,6 +131,8 @@ export default function FormDisciplina({navigation}) {
               baseColor={'#7159c1'}
               onChangeText={setName}
               title={'Digite o nome da disciplina'}
+              autoCompleteType={'off'}
+              autoFocus={true}
             />
             <TextField
               value={miss}
@@ -141,6 +143,7 @@ export default function FormDisciplina({navigation}) {
               onChangeText={setMiss}
               title={'Digite a quantidade máxima de faltas'}
               keyboardType={'numeric'}
+              autoCompleteType={'off'}
             />
             <SubmitButton onPress={handleSaveButton}>
               <Icon name={'content-save'} size={24} color={'#fff'} />

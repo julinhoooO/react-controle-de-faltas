@@ -30,6 +30,16 @@ export const Title = styled.Text`
 
 export const Card = styled.View`
   background-color: ${props =>
+    props.missesLeft >= 3 ? themes.light.card.backgroundColor : '#ff4a4a'};
+  border-bottom-width: 1px;
+  border-bottom-color: ${themes.light.card.borderColor};
+  padding: 8px 4px;
+  justify-content: center;
+  align-items: center;
+`;
+
+export const GradeCard = styled.View`
+  background-color: ${props =>
     props.transparent ? 'transparent' : themes.light.card.backgroundColor};
   border-bottom-width: 1px;
   border-bottom-color: ${themes.light.card.borderColor};

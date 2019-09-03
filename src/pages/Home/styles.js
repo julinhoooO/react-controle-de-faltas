@@ -15,7 +15,7 @@ export const Title = styled.Text`
   font-size: 32px;
   font-weight: bold;
   color: ${themes.light.title.color};
-  padding: 10px 20px 0;
+  padding: 10px 20px 7.5px;
   background-color: transparent;
 `;
 

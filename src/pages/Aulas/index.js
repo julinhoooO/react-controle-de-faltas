@@ -1,10 +1,19 @@
 import React, {useState, useEffect} from 'react';
+import {Vibration} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {NavigationActions} from 'react-navigation';
+import {NavigationActions, StackActions} from 'react-navigation';
+import {
+  Button,
+  Paragraph,
+  Dialog,
+  Portal,
+  Modal,
+  List,
+  Divider,
+  TouchableRipple,
+} from 'react-native-paper';
 
 import getRealm from '../../services/realm';
-
-import {getStringDate, formatDateBR} from '../../functions';
 
 import {
   Placeholder,
@@ -26,7 +35,7 @@ import {
   ButtonsContainer,
   AddMissButton,
   DataContainer,
-  GradeData,
+  GradeCard,
   FloatingButtonOpenModal,
   FloatingButtonOpenModalText,
   GradeDay,
@@ -54,6 +63,10 @@ export default function Aulas({navigation}) {
   const [isFocused, setIsFocused] = useState(navigation.isFocused());
   const [disciplinaData, setDisciplinaData] = useState([]);
   const [gradesData, setGradesData] = useState([]);
+  const [visibleGradeDialog, setVisibleGradeDialog] = useState(false);
+  const [visibleConfirmation, setVisibleConfirmation] = useState(false);
+  const [idGrade, setIdGrade] = useState();
+  const [nameGrade, setNameGrade] = useState('');
   const {params} = navigation.state;
   async function increaseMisses() {
     const realm = await getRealm();
@@ -101,25 +114,26 @@ export default function Aulas({navigation}) {
     setDisciplinaData(newData[0]);
   }
 
-  async function deleteDisciplina() {
+  async function deleteGrade(id) {
     const realm = await getRealm();
-    const disciplinaData = realm
-      .objects('Disciplina')
-      .sorted('name')
-      .filtered(`id == ${params.data.id}`);
+    const gradeData = realm.objects('Grade').filtered(`id == ${id}`);
     realm.write(() => {
-      realm.delete(disciplinaData[0]);
+      realm.delete(gradeData[0]);
     });
 
-    navigation.reset(
-      [
+    const navigateToAulas = StackActions.reset({
+      index: 1,
+      actions: [
         NavigationActions.navigate({
-          routeName: 'DashBoard',
-          params: {page: 'Disciplinas'},
+          routeName: 'Disciplinas',
+        }),
+        NavigationActions.navigate({
+          routeName: 'Details',
+          params: {data: params.data},
         }),
       ],
-      0,
-    );
+    });
+    navigation.dispatch(navigateToAulas);
   }
 
   useEffect(() => {
@@ -146,15 +160,99 @@ export default function Aulas({navigation}) {
   }, [isFocused]);
   return (
     <Container>
+      <Portal>
+        <Dialog
+          visible={visibleConfirmation}
+          onDismiss={() => {
+            setVisibleConfirmation(false);
+          }}>
+          <Dialog.Title>Excluir</Dialog.Title>
+          <Dialog.Content>
+            <Paragraph>
+              Tem certeza que deseja excluir{' '}
+              {`${nameGrade} de ${disciplinaData.name}`}?
+            </Paragraph>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button
+              onPress={() => {
+                setVisibleConfirmation(false);
+              }}>
+              Cancelar
+            </Button>
+            <Button
+              onPress={() => {
+                deleteGrade(idGrade);
+                setVisibleConfirmation(false);
+              }}>
+              Excluir
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+        <Modal
+          visible={visibleGradeDialog}
+          onDismiss={() => {
+            setVisibleGradeDialog(false);
+          }}>
+          <List.Section
+            title={`${nameGrade} - ${disciplinaData.name}`}
+            titleStyle={{
+              fontWeight: 'bold',
+              color: '#000',
+              fontSize: 18,
+            }}
+            style={{
+              marginHorizontal: 18,
+              borderRadius: 2,
+              backgroundColor: '#fff',
+            }}>
+            <Divider />
+            <List.Item
+              title="Excluir"
+              left={props => (
+                <List.Icon {...props} color={'#000'} icon="delete" />
+              )}
+              onPress={() => {
+                setVisibleGradeDialog(false);
+                setVisibleConfirmation(true);
+              }}
+              titleStyle={{
+                color: '#000',
+              }}
+              style={{height: 56}}
+            />
+            <List.Item
+              title="Editar"
+              left={props => (
+                <List.Icon {...props} color={'#000'} icon="edit" />
+              )}
+              onPress={() => {
+                setVisibleGradeDialog(false);
+                setVisibleConfirmation(false);
+                setTimeout(() => {
+                  navigation.navigate('FormGrade', {
+                    update: true,
+                    data: params.data,
+                    grade_id: idGrade,
+                  });
+                }, 180);
+              }}
+              titleStyle={{
+                color: '#000',
+              }}
+            />
+          </List.Section>
+        </Modal>
+      </Portal>
       {disciplinaData.id ? (
         <>
           <HeaderDisciplina>
             <Title>{disciplinaData.name}</Title>
-            <DeleteButton onPress={deleteDisciplina}>
-              <Icon name={'delete'} size={24} color="#7159c1" />
-            </DeleteButton>
           </HeaderDisciplina>
-          <Card>
+          <Card
+            missesLeft={
+              disciplinaData.maximum_miss - disciplinaData.miss_quantity
+            }>
             <RowContainer>
               <ColumnContainer>
                 <Name>Faltas: {disciplinaData.miss_quantity}</Name>
@@ -177,42 +275,37 @@ export default function Aulas({navigation}) {
             <Title>Provas/Trabalhos</Title>
           </HeaderDisciplina>
           {gradesData.map(grade => (
-            <Card key={grade.id}>
-              <RowContainer>
-                <DataContainer>
-                  <GradeMonth>
-                    {weeksString[new Date(grade.date).getDay()]}
-                  </GradeMonth>
-                  <GradeDay>{new Date(grade.date).getDate()}</GradeDay>
-                  <GradeMonth>
-                    {monthsString[new Date(grade.date).getMonth()]}
-                  </GradeMonth>
-                </DataContainer>
-                <DataContainer flex={8}>
-                  <Name>{grade.name}</Name>
-                  <NameTiny>
-                    Nota: {grade.grade}/{grade.maximum_grade}
-                  </NameTiny>
-                </DataContainer>
-                <ButtonsContainer>
-                  <RowContainer>
-                    <AddMissButton
-                      onPress={() => {
-                        navigation.navigate('FormGrade', {
-                          update: true,
-                          data: params.data,
-                          grade_id: grade.id,
-                        });
-                      }}>
-                      <Icon name={'pencil'} size={24} color="#fff" />
-                    </AddMissButton>
-                    <AddMissButton onPress={() => {}}>
-                      <Icon name={'delete'} size={24} color="#fff" />
-                    </AddMissButton>
-                  </RowContainer>
-                </ButtonsContainer>
-              </RowContainer>
-            </Card>
+            <TouchableRipple
+              underlayColor={'rgba(113, 89, 193, .16)'}
+              borderless={true}
+              rippleColor={'rgba(113, 89, 193, .16)'}
+              onPress={() => {}}
+              onLongPress={() => {
+                Vibration.vibrate([1, 50, 30, 50]);
+                setNameGrade(grade.name);
+                setIdGrade(grade.id);
+                setVisibleGradeDialog(true);
+              }}>
+              <GradeCard key={grade.id}>
+                <RowContainer>
+                  <DataContainer>
+                    <GradeMonth>
+                      {weeksString[new Date(grade.date).getDay()]}
+                    </GradeMonth>
+                    <GradeDay>{new Date(grade.date).getDate()}</GradeDay>
+                    <GradeMonth>
+                      {monthsString[new Date(grade.date).getMonth()]}
+                    </GradeMonth>
+                  </DataContainer>
+                  <DataContainer flex={8}>
+                    <Name>{grade.name}</Name>
+                    <NameTiny>
+                      Nota: {grade.grade}/{grade.maximum_grade}
+                    </NameTiny>
+                  </DataContainer>
+                </RowContainer>
+              </GradeCard>
+            </TouchableRipple>
           ))}
           <FloatingButtonOpenModal
             onPress={() => {
@@ -231,7 +324,7 @@ export default function Aulas({navigation}) {
           <Placeholder Animation={Shine}>
             <PlaceholderLine height={48} width={50} style={{borderRadius: 4}} />
           </Placeholder>
-          <Card transparent>
+          <GradeCard transparent>
             <Placeholder
               Animation={Shine}
               Left={props => (
@@ -252,7 +345,7 @@ export default function Aulas({navigation}) {
               )}>
               <PlaceholderLine height={68} style={{borderRadius: 4}} />
             </Placeholder>
-          </Card>
+          </GradeCard>
         </>
       )}
     </Container>
